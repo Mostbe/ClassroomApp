@@ -68,6 +68,9 @@
       <div v-if="lastSaved" class="text-xs text-gray-500 mb-4 text-center">
         💾 Zuletzt gespeichert: {{ lastSaved }}
       </div>
+      <div v-if="!storageAvailable" class="text-xs text-red-600 mb-4 text-center">
+        ⚠️ Lokales Speichern ist nicht verfügbar. Verwende einen normalen Safari-Tab und nicht den privaten Modus.
+      </div>
 
       <div v-if="activeGradebook" class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm mb-6">
         <div class="grid gap-4 lg:grid-cols-[1.8fr_1.2fr]">
@@ -113,7 +116,7 @@
       </div>
 
       <div v-if="activeGradebook" class="bg-white rounded-2xl shadow-sm overflow-x-auto touch-pan-x">
-        <table class="min-w-[1200px] w-full border-separate border-spacing-0 text-sm">
+        <table @keydown.enter.prevent="focusNextInput" class="min-w-[1200px] w-full border-separate border-spacing-0 text-sm">
           <thead>
             <tr class="bg-slate-800 text-white">
               <th class="sticky left-0 z-20 bg-slate-800 px-4 py-3 border-r border-slate-700 text-left font-semibold">Schüler</th>
@@ -234,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, toRaw, watchEffect } from 'vue'
+import { computed, onMounted, reactive, ref, toRaw, watch } from 'vue'
 
 interface HourColumn {
   id: number
@@ -264,6 +267,7 @@ const newClassName = ref('7A')
 const newStudentName = ref('')
 const newHourDate = ref(formatDate(new Date()))
 const lastSaved = ref<string>('')
+const storageAvailable = ref(true)
 let nextStudentId = 1
 let nextHourColumnId = 1
 let nextGradebookId = 1
@@ -303,9 +307,15 @@ function saveToStorage() {
     nextGradebookId,
     activeGradebookId: activeGradebookId.value
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-  const now = new Date()
-  lastSaved.value = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    storageAvailable.value = true
+    const now = new Date()
+    lastSaved.value = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  } catch (error) {
+    storageAvailable.value = false
+    console.warn('Speichern nicht möglich:', error)
+  }
 }
 
 function exportData() {
@@ -368,6 +378,16 @@ function importData(event: Event) {
 function formatDate(date: Date | string): string {
   const parsed = typeof date === 'string' ? new Date(date) : date
   return parsed.toISOString().slice(0, 10)
+}
+
+function focusNextInput(event: KeyboardEvent) {
+  const target = event.target as HTMLElement | null
+  if (!(target instanceof HTMLInputElement)) return
+  const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('table input'))
+  const currentIndex = inputs.indexOf(target)
+  if (currentIndex === -1) return
+  const nextInput = inputs[currentIndex + 1]
+  if (nextInput) nextInput.focus()
 }
 
 function formatDateHeader(date: string): string {
@@ -546,7 +566,8 @@ onMounted(() => {
   }
 })
 
-watchEffect(saveToStorage)
+watch(gradebooks, saveToStorage, { deep: true, flush: 'sync' })
+watch(activeGradebookId, saveToStorage)
 </script>
 
 <style scoped>
