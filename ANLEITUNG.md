@@ -6,9 +6,9 @@
 
 1. **Safari öffnen** und diese URL eingeben:  
    ```
-   https://deine-domain.de
+   https://mostbe.github.io/ClassroomApp
    ```
-   *(Ersetze mit der echten Domain, auf der die App gehostet wird)*
+   *(Die App ist über GitHub Pages unter `docs/` gehostet.)*
 
 2. **Auf dem Startbildschirm speichern** (App-Icon erstellen):
    - Tippe auf das **Teilen-Symbol** (↗️) oben rechts
