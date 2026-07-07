@@ -173,6 +173,7 @@
                 <input
                   v-model="student.hours[colIndex]"
                   @input="student.hours[colIndex] = normalizeGradeEvent($event)"
+                  @change="saveToStorage"
                   type="text"
                   maxlength="3"
                   placeholder="++ / + / 0 / - / --"
@@ -183,6 +184,7 @@
                 <input
                   v-model="student.exams[i - 1]"
                   @input="student.exams[i - 1] = normalizeGradeEvent($event)"
+                  @change="saveToStorage"
                   type="text"
                   maxlength="3"
                   placeholder="1-6 / ++ / + / 0 / - / --"
@@ -193,6 +195,7 @@
                 <input
                   v-model="student.quarters[i - 1]"
                   @input="student.quarters[i - 1] = normalizeGradeEvent($event)"
+                  @change="saveToStorage"
                   type="text"
                   maxlength="3"
                   placeholder="1-6 / ++ / + / 0 / - / --"
@@ -205,6 +208,7 @@
                 <input
                   v-model="student.oralManual"
                   @input="student.oralManual = normalizeGradeEvent($event)"
+                  @change="saveToStorage"
                   type="text"
                   maxlength="3"
                   placeholder="++ / + / 0 / - / --"
@@ -215,6 +219,7 @@
                 <input
                   v-model="student.finalManual"
                   @input="student.finalManual = normalizeGradeEvent($event)"
+                  @change="saveToStorage"
                   type="text"
                   maxlength="3"
                   placeholder="++ / + / 0 / - / --"
@@ -367,6 +372,7 @@ function importData(event: Event) {
       nextStudentId = Math.max(1, ...gradebooks.flatMap(book => book.students.map(student => student.id)), 0) + 1
       nextHourColumnId = Math.max(1, ...gradebooks.flatMap(book => book.hourColumns.map(column => column.id)), 0) + 1
       nextGradebookId = Math.max(1, ...gradebooks.map(book => book.id), 0) + 1
+      saveToStorage()
     } catch (error) {
       console.error('Import fehlgeschlagen:', error)
       alert('Import fehlgeschlagen. Bitte stellen Sie sicher, dass die Datei das richtige Format hat.')
@@ -412,6 +418,7 @@ function addGradebook() {
   gradebooks.push(newBook)
   activeGradebookId.value = newBook.id
   newClassName.value = ''
+  saveToStorage()
 }
 
 function selectGradebook(id: number) {
@@ -436,11 +443,13 @@ function addStudent() {
 
   activeGradebook.value.students.push(newStudent)
   newStudentName.value = ''
+  saveToStorage()
 }
 
 function removeStudent(index: number) {
   if (!activeGradebook.value) return
   activeGradebook.value.students.splice(index, 1)
+  saveToStorage()
 }
 
 function ensureHours(student: Student) {
@@ -459,6 +468,7 @@ function addHourColumn() {
   const next = new Date(newHourDate.value)
   next.setDate(next.getDate() + 1)
   newHourDate.value = formatDate(next)
+  saveToStorage()
 }
 
 function normalizeGradeInput(value: string): string {
